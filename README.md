@@ -1,5 +1,7 @@
 # Nancy Face Recognition System (Beta version)
 
+## _This page is also available in [Russian version](https://github.com/rumiantsevaa/Face_Recognition_Nancy_Database/blob/main/(ru)README.md)_
+
 ![image](https://github.com/user-attachments/assets/95b5a2c0-af39-45ca-bffd-8a5b0e7ee69b)
 
 ##  This application was created to make a simple yet powerful face recognition application based on your own local face database.
