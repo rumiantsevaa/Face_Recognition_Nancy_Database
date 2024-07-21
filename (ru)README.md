@@ -1,4 +1,4 @@
-# Nancy Face Recognition System (Beta-версия)
+# Nancy Face Recognition | Destop GUI Application (Beta-версия)
 
 ![image](https://github.com/user-attachments/assets/95b5a2c0-af39-45ca-bffd-8a5b0e7ee69b)
 
