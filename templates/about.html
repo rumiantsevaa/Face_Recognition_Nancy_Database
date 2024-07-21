@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy Database - About Nancy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;     /* Правильно но черное*/
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .header {
+            display: flex;
+            justify-content: center;
+            background-color: #ffffff;
+            border-bottom: 0 solid white;
+        }
+        .header div {
+            cursor: pointer;
+            display: flex; /* Используем flexbox для выравнивания текста */
+            justify-content: center; /* Горизонтальное выравнивание по центру */
+            align-items: center; /* Вертикальное выравнивание по центру */
+            width: 100%;
+            padding: 10px;
+            color: black;
+            background-color: white;
+            font-weight: bold;
+            text-align: center; /* Дополнительное горизонтальное выравнивание */
+        }
+        #about-tab {
+            background-color: black;
+            color: white;
+        }
+        .content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 80px;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+        }
+        .about-text {
+            text-align: center;
+            font-size: 16px;
+        }
+        .about-text a {
+            color: inherit;
+            text-decoration: underline;
+        }
+    </style>
+</head>	
+<body>
+    <div class="header">
+        <div id="search-tab" onclick="navigate('/search')">SEARCH</div>
+        <div id="database-tab" onclick="navigate('/database')">DATABASE</div>
+        <div id="about-tab">ABOUT NANCY</div>
+    </div>
+    <div class="content">
+        <div id="about-content" class="container">
+            <p class="about-text">Hey, thank you for launching my app! Visit my GitHub for more <a href="https://github.com/rumiantsevaa?tab=repositories" target="_blank">here</a>.</p>
+        </div>
+    </div>
+	  <script>
+        function navigate(page) {
+            window.location.href = page;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy Database - Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .header {
+            display: flex;
+            justify-content: center;
+            background-color: #ffffff;
+            border-bottom: 0 solid black;
+        }
+        .header div {
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+            color: white;
+            background-color: black;
+            font-weight: bold;
+            text-align: center;
+        }
+        #search-tab.active-tab {
+            background-color: white;
+            color: black;
+        }
+        .content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 80px;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+        }
+        output {
+            width: 100%;
+            min-height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            border-radius: 5px;
+        }
+        output .image {
+            height: 300px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+        output .image img {
+            height: 100%;
+            width: auto;
+        }
+        output .image span {
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            cursor: pointer;
+            font-size: 22px;
+            color: white;
+        }
+        output .image span:hover {
+            opacity: 0.8;
+        }
+        output .span--hidden {
+            visibility: hidden;
+        }
+        .dropzone {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+        }
+        .dropzone.hover {
+            border-color: #000;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div id="search-tab" class="active-tab">SEARCH</div>
+        <div id="database-tab" onclick="navigate('/database')">DATABASE</div>
+        <div id="about-tab" onclick="navigate('/about')">ABOUT NANCY</div>
+    </div>
+    <div class="content">
+        <div id="search-content" class="container">
+            <input type="file" id="fileInput" accept="image/jpeg, image/png, image/jpg" style="display: none;">
+            <button type="button" class="btn" onclick="document.getElementById('fileInput').click()">Upload Photo</button>
+            <div class="dropzone" id="dropzone">Or drag and drop a photo here.</div>
+            <output id="output"></output>
+        </div>
+    </div>
+
+     <script>
+        const input = document.getElementById('fileInput');
+        const output = document.getElementById('output');
+        const dropzone = document.getElementById('dropzone');
+        let imagesArray = [];
+        let flasksrv_last_uploaded_photo = '';
+
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (validateFile(file)) {
+                imagesArray = [file]; // replace the array with the new file
+                displayImages();
+                uploadFile(file);
+            } else {
+                alert('Invalid file type. Only JPEG, PNG, and JPG files are allowed.');
+            }
+        });
+
+        dropzone.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('hover');
+        });
+
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('hover');
+        });
+
+        dropzone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('hover');
+        });
+
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('hover');
+            if (imagesArray.length > 0) {
+                alert('You can only upload one file at a time.');
+                return;
+            }
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 1) {
+                alert('You can only upload one file at a time.');
+                return;
+            }
+            const file = files[0];
+            if (validateFile(file)) {
+                imagesArray = [file]; // replace the array with the new file
+                displayImages();
+                uploadFile(file);
+            } else {
+                alert('Invalid file type. Only JPEG, PNG, and JPG files are allowed.');
+            }
+        });
+
+        function displayImages() {
+            let images = "";
+            imagesArray.forEach((image, index) => {
+                images += `<div class="image">
+                            <img src="${URL.createObjectURL(image)}" alt="image">
+                            <span onclick="deleteImage(${index})">&times;</span>
+                          </div>`;
+            });
+            output.innerHTML = images;
+        }
+
+        function deleteImage(index) {
+            imagesArray.splice(index, 1);
+            displayImages();
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Upload success:', data);
+                flasksrv_last_uploaded_photo = '/temp_upload/' + data.filename;
+                processFace(flasksrv_last_uploaded_photo);
+            })
+            .catch((error) => {
+                console.error('Upload error:', error);
+            });
+        }
+
+        function processFace(filepath) {
+    fetch('/process_face', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({filepath: filepath})
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Face processing result:', data);
+        if (data.success && data.redirect) {
+            window.location.href = data.redirect;
+        }
+    })
+    .catch((error) => {
+        console.error('Face processing error:', error);
+    });
+}
+
+        function validateFile(file) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            return validTypes.includes(file.type);
+        }
+
+        function navigate(page) {
+            window.location.href = page;
+        }
+    </script>
+</body>
+</html>

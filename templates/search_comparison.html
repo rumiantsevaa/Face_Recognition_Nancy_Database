@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy Database - Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .header {
+            display: flex;
+            justify-content: center;
+            background-color: #ffffff;
+            border-bottom: 0 solid black;
+        }
+        .header div {
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+            color: white;
+            background-color: black;
+            font-weight: bold;
+            text-align: center;
+        }
+        #search-tab.active-tab {
+            background-color: white;
+            color: black;
+        }
+        .content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 80px;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+        }
+        .comparison-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .comparison-box {
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .comparison-box img {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            background-color: black;
+        }
+        .comparison-box p {
+            margin-top: 10px;
+            background-color: black;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .loading-text {
+            width: 100%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #reset-btn-container {
+        display: none; /* Изначально скрыто */
+        position: fixed;
+        bottom: 20px; /* Расстояние от нижнего края экрана */
+        left: 50%; /* Центрирование по горизонтали */
+        transform: translateX(-50%); /* Корректировка для центрирования */
+        width: 100%;
+        text-align: center;
+    }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div id="search-tab" class="active-tab">SEARCH</div>
+        <div id="database-tab">DATABASE</div>
+        <div id="about-tab">ABOUT NANCY</div>
+    </div>
+    <div class="content">
+        <div id="search-content" class="container">
+            <div class="comparison-container">
+                <div id="user-photo-box" class="comparison-box">
+                    <img src="{{ url_for('static', filename='empty_square.jpg') }}" alt="User Placeholder">
+                    <p id="user-photo-text">User Photo: /loading...</p>
+                </div>
+                <div id="db-photo-box" class="comparison-box">
+                    <img src="{{ url_for('static', filename='empty_square.jpg') }}" alt="Database Placeholder">
+                    <p id="db-photo-text">DB Photo: /loading...</p>
+                    <p id="db-similarity-text">Similarity: /loading...</p>
+                    <p id="db-name-text">Name: /loading...</p>
+                </div>
+            </div>
+        </div>
+        <div id="reset-btn-container" class="btn-container" style="display: none;">
+    <button class="btn" onclick="resetSearch()">RESET SEARCH</button>
+</div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filepath = urlParams.get('filepath');
+
+            if (filepath) {
+                console.log("Filepath from URL:", filepath);
+                searchInDatabase(filepath);
+            } else {
+                console.error('No filepath provided in URL');
+            }
+        });
+
+        function searchInDatabase(filepath) {
+            console.log("Sending filepath to server:", filepath);
+            fetch('/search_in_db', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filepath: filepath }),
+            })
+            .then(response => response.json())
+            .then(searchResults => {
+                console.log('Search results:', searchResults);
+                if (searchResults.error) {
+                    console.error('Error from server:', searchResults.error);
+                } else {
+                    updateUI(searchResults);
+                    showResetButton(); // Показываем кнопку RESET SEARCH
+                    if (!searchResults.match_found) {
+                        promptForName(searchResults.db_new_ph_url);
+                }
+                    }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function promptForName(filename) {
+        if (confirm('Would you like to add a name for this face?')) {
+            let name = prompt('Type the name here');
+            let confirmName = confirm('Confirm or deny your choice');
+            if (confirmName && name) {
+                addNameToDatabase(filename, name);
+            } else {
+                console.log('The new face was saved with no name given.');
+            }
+        } else {
+            console.log('The new face was saved with no name given.');
+        }
+    }
+
+    function addNameToDatabase(filename, name) {
+        fetch('/add_name', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ filename: filename, name: name }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Name added successfully');
+            } else {
+                console.error('Failed to add name:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+        function processFace(filepath) {
+            fetch('/process_face', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filepath: filepath })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Face processing result:', data);
+                if (data.success && data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    console.error('Face processing failed:', data.message);
+                }
+            })
+            .catch((error) => {
+                console.error('Face processing error:', error);
+            });
+        }
+
+function updateUI(searchResults) {
+    const userPhotoBox = document.getElementById('user-photo-box');
+    const dbPhotoBox = document.getElementById('db-photo-box');
+    const userPhotoText = document.getElementById('user-photo-text');
+    const dbPhotoText = document.getElementById('db-photo-text');
+    const dbSimilarityText = document.getElementById('db-similarity-text');
+    const dbNameText = document.getElementById('db-name-text');
+
+    console.log('User Photo URL:', searchResults.db_user_ph_url);
+    console.log('DB Photo URL:', searchResults.db_matched_ph_url || searchResults.db_new_ph_url || 'N/A');
+
+    // Обновляем фото пользователя
+    userPhotoBox.querySelector('img').src = searchResults.db_user_ph_url;
+
+    // Обновляем текстовые параметры для пользователя
+    userPhotoText.textContent = "User Photo";
+
+    // Обновляем текстовые параметры для базы данных
+    if (searchResults.match_found) {
+        dbPhotoBox.querySelector('img').src = searchResults.db_matched_ph_url;
+        dbPhotoText.textContent = "DB Photo";
+        dbSimilarityText.textContent = `Similarity: ${searchResults.similarity}`;
+        dbNameText.textContent = `Name: ${searchResults.name || 'Unknown'}`;
+    } else if (searchResults.db_new_ph_url) {
+        dbPhotoBox.querySelector('img').src = searchResults.db_new_ph_url;
+        dbPhotoText.textContent = "New Photo Added to DB";
+        dbSimilarityText.textContent = 'Similarity: N/A';
+        dbNameText.textContent = 'Name: N/A';
+    } else {
+        dbPhotoBox.querySelector('img').src = ''; // Очищаем изображение
+        dbPhotoText.textContent = searchResults.message;
+        dbSimilarityText.textContent = 'Similarity: N/A';
+        dbNameText.textContent = 'Name: N/A';
+    }
+}
+
+// Функция для отображения кнопки RESET SEARCH
+    function showResetButton() {
+        document.getElementById('reset-btn-container').style.display = 'flex';
+    }
+
+    // Функция для обработки нажатия на кнопку RESET SEARCH
+    function resetSearch() {
+        window.location.href = '/search'; // Перенаправление на страницу поиска
+    }
+    </script>
+</body>
+</html>
