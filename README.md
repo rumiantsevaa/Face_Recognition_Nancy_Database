@@ -50,7 +50,7 @@
 ![image](https://github.com/user-attachments/assets/b5fae918-715c-48dc-8cf3-244c4331b16f)
 
 
-- Comparison view for user photo and database match
+### - Comparison view for user photo and database match
 
 
 ## Installation | Requirements
