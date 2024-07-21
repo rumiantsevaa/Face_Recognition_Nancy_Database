@@ -8,16 +8,12 @@ from PyQt5.QtWidgets import QApplication, QLabel, QDesktopWidget
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
 import sys
-import tkinter as tk
-from tkinter import filedialog
 from PIL import Image
-import flaskwebgui
-from flaskwebgui import FlaskUI  # import FlaskUI
+from flaskwebgui import FlaskUI 
 from flask import Flask
-from flask import render_template, request, jsonify, redirect
+from flask import render_template, request
 from flask import jsonify
 from flask import send_from_directory, send_file
-from flask import url_for
 
 app = Flask(__name__, template_folder='templates')
 # Добавьте эту константу в начало файла
