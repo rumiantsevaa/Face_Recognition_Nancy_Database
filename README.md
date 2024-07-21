@@ -1,4 +1,4 @@
-# Nancy Face Recognition System (Beta version)
+# Nancy Face Recognition | Destop GUI Application (Beta version)
 
 ## _This page is also available in [Russian version](https://github.com/rumiantsevaa/Face_Recognition_Nancy_Database/blob/main/(ru)README.md)_
 
