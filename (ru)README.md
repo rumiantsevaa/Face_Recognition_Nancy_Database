@@ -1,6 +1,10 @@
-# Nancy Face Recognition | Destop GUI Application (Beta-версия)
+# Nancy Face Recognition | Destop GUI Application
 
-![image](https://github.com/user-attachments/assets/95b5a2c0-af39-45ca-bffd-8a5b0e7ee69b)
+<p align="center">
+  <img width="1280 " height="600" src="https://github.com/user-attachments/assets/be9adc6d-fc12-43c3-aa93-bdae2db51f0e">
+</p>
+
+![image](https://github.com/user-attachments/assets/280f91f9-0679-4931-8d49-9c870a1255f3)
 
 ##  Это приложение создано с целью создать простое, но мощное приложение по распознаванию лиц на базе собственной лоĸальной базы данных.
 
@@ -51,6 +55,9 @@
 
 ### - Просмотр сравнения фотографий пользователя и соответствия в базе данных
 
+![image_2024-08-19_18-59-52](https://github.com/user-attachments/assets/722439ef-01e5-417d-b160-4589e6728f0e)
+
+![image_2024-08-19_19-05-09](https://github.com/user-attachments/assets/b6623e92-8025-4911-bac8-685ec35bd9de)
 
 ## Установĸа | Требования
 
