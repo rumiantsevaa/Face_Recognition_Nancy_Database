@@ -1,8 +1,6 @@
 # Nancy Face Recognition | Destop GUI Application
 
-<p align="center">
-  <img width="1280 " height="600" src="https://github.com/user-attachments/assets/be9adc6d-fc12-43c3-aa93-bdae2db51f0e">
-</p>
+![image](https://github.com/user-attachments/assets/be9adc6d-fc12-43c3-aa93-bdae2db51f0e)
 
 ![image](https://github.com/user-attachments/assets/280f91f9-0679-4931-8d49-9c870a1255f3)
 
@@ -43,9 +41,7 @@
 
 ### - Добавление новых лиц в базу данных
 
-![image](https://github.com/user-attachments/assets/f97eb416-e65b-4d58-9da0-0bc2c28fd375)
-
-![image](https://github.com/user-attachments/assets/efc54bf7-e0a2-4287-bf9a-3eb449a91d97)
+![image](https://github.com/user-attachments/assets/97f1f1a5-ceb5-4c60-af7d-c6d20eb35baa)
 
 
 ### - Пользовательсĸий веб-интерфейс
