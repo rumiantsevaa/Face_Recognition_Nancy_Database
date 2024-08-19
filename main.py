@@ -194,7 +194,7 @@ def add_name_attribute():
     # Обновление найденных строк
     for row in rows:
         rowid, current_name = row
-        # Обработка случая, когда current_name может быть None
+        # Обработка случая, когда current_name может быть None.
         current_name = current_name or ''
         new_name = current_name + name
         cursor.execute("UPDATE faces SET name = ? WHERE rowid = ?", (new_name, rowid))
