@@ -9,18 +9,20 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
 import sys
 from PIL import Image
-from flaskwebgui import FlaskUI 
+from flaskwebgui import FlaskUI
 from flask import Flask
 from flask import render_template, request
 from flask import jsonify
 from flask import send_from_directory, send_file
 
 app = Flask(__name__, template_folder='templates')
-# Добавьте эту константу в начало файла
+
+# Константы
 UPLOAD_FOLDER = 'temp_upload'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
+# Пути Flask
 @app.route('/')
 @app.route('/search')
 def open_search_page():
@@ -41,14 +43,11 @@ def about():
 def database():
     # Подключение к базе данных
     conn, cursor = connect_or_create_db()
-
     # Извлечение данных из таблицы faces
     cursor.execute("SELECT filename, name FROM faces")
     faces = cursor.fetchall()
-
     # Закрытие соединения с базой данных
     conn.close()
-
     # Передача данных в шаблон
     return render_template('database.html', faces=faces)
 
@@ -78,7 +77,7 @@ def get_image(filename):
 
 # Функция вывода уведомления о нахождении совпадения
 def search_notice(is_true):
-    app = QApplication(sys.argv)
+    q_app = QApplication(sys.argv)
 
     # Выбор файла в зависимости от параметра
     file_name = "FOUND.JPEG" if is_true else "NOTFOUND.JPEG"
@@ -114,9 +113,9 @@ def search_notice(is_true):
     notice.show()
 
     # Установка таймера на закрытие через 2 секунды
-    QTimer.singleShot(2000, app.quit)
+    QTimer.singleShot(2000, q_app.quit)
 
-    app.exec_()
+    q_app.exec_()
 
 
 # Функция подключения/создания бд
@@ -129,32 +128,12 @@ def connect_or_create_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS faces
                       (id INTEGER PRIMARY KEY, filename TEXT, encoding BLOB, name TEXT)''')
 
-    # Создаем таблицу для хранения названий файлов
+    # Создаем таблицу для хранения названий индексированных файлов
     cursor.execute('''CREATE TABLE IF NOT EXISTS indexed_files
                       (id INTEGER PRIMARY KEY, filename TEXT)''')
 
     conn.commit()
     return conn, cursor
-
-
-@app.route('/add_name', methods=['POST'])
-def add_name_attribute():
-    data = request.get_json()
-    name = data.get('name')
-    filename = data.get('filename')
-
-    if name is None or filename is None:
-        return jsonify({'success': False, 'message': 'Name or filename not provided'}), 400
-
-    # Connect to the database
-    conn, cursor = connect_or_create_db()
-
-    cursor.execute("UPDATE faces SET name = ? WHERE filename = ?", (name, filename))
-    conn.commit()
-    conn.close()
-    print(f"Имя человека {name} добавлено для файла {filename}")
-
-    return jsonify({'success': True, 'message': 'Name added successfully'})
 
 
 @app.route('/upload', methods=['POST'])
@@ -182,7 +161,7 @@ def process_face():
     if filepath:
         # Получаем локальный путь к файлу
         local_path = os.path.join(app.root_path, *filepath.lstrip('/').split('/'))
-        print(f"Локальный путь к файлу: {local_path}")
+        print(f"Local file path: {local_path}")
         # Загружаем изображение redirect
         encoding, filename = load_face_for_search(local_path)
         if encoding is not None:
@@ -190,6 +169,42 @@ def process_face():
         else:
             return jsonify({'success': False, 'message': 'No face detected in the image'})
     return jsonify({'success': False, 'message': 'No filepath provided'})
+
+
+@app.route('/add_name', methods=['POST'])
+def add_name_attribute():
+    data = request.get_json()
+    name = data.get('name')
+    filename = data.get('filename')
+
+    if name is None or filename is None:
+        return jsonify({'success': False, 'message': 'Name or filename not provided'}), 400
+
+    # Подключение к базе данных
+    conn, cursor = connect_or_create_db()
+
+    # Поиск строки, где filename находится в конце
+    cursor.execute("SELECT rowid, name FROM faces WHERE filename LIKE ?", ('%' + filename,))
+    rows = cursor.fetchall()
+
+    if not rows:
+        conn.close()
+        return jsonify({'success': False, 'message': 'No matching records found'}), 404
+
+    # Обновление найденных строк
+    for row in rows:
+        rowid, current_name = row
+        # Обработка случая, когда current_name может быть None
+        current_name = current_name or ''
+        new_name = current_name + name
+        cursor.execute("UPDATE faces SET name = ? WHERE rowid = ?", (new_name, rowid))
+
+    # Сохранение изменений
+    conn.commit()
+    conn.close()
+    print(f"Face's name {name} added for the file {filename}")
+
+    return jsonify({'success': True, 'message': 'Name added successfully'})
 
 
 # Функция индексации фотографий
@@ -214,18 +229,15 @@ def index_photos(conn, cursor):
                                    (filename, encodings[0].tobytes()))
                     cursor.execute("INSERT INTO indexed_files (filename) VALUES (?)", (filename,))
                     conn.commit()
-                    print(f"Проиндексирован добавленный файл: {filename}")
-                    print(f"Хотите добавить имя для лица на фото {filename}? (да/нет)")
-                    if input().lower() == 'да':
-                        add_name_attribute(conn, cursor, filename)
+                    print(f"New face indexed: {filename}")
                 else:
-                    print(f"Не удалось обнаружить лицо в файле: {filename}")
+                    print(f"No face detected in : {filename}")
 
 
 # Функция загрузки лица для поиска по бд
 def load_face_for_search(uploaded_image):
     file_path = uploaded_image
-    print(f"Передано изображение: {file_path}")
+    print(f"File accepted in processing: {file_path}")
     if os.path.exists(file_path):
         try:
             with Image.open(file_path) as original_image:
@@ -236,21 +248,12 @@ def load_face_for_search(uploaded_image):
                 img_rgb.save(file_path)
 
                 # Проверяем формат изображения после конвертации
-                print(f"Размер изображения: {img_rgb.size}")
-                print(img_rgb.mode)
+                print(f"Image size: {img_rgb.size}")
+                print(f"Image mode: {img_rgb.mode}")
 
-                # Find all the faces that appear in a picture
+                # Ищем лица, которые встречаются в изображении, возвращаем кодировку первого лица
                 img_find_faces = face_recognition.load_image_file(file_path)
-                print("1")
-
-                #  img_face_locations = face_recognition.face_locations
-                #  (img_find_faces, number_of_times_to_upsample=2, model="cnn")
-                img_face_locations = face_recognition.face_locations(img_find_faces)
-                print("2")
-
-                # Find facial features in pictures
-                img_face_landmarks_list = face_recognition.face_landmarks(img_find_faces)
-                print("3")
+                print("Found all the faces that appear in a picture")
 
                 # Теперь вызываем функцию распознавания лиц
                 encodings = face_recognition.face_encodings(img_find_faces)
@@ -258,10 +261,10 @@ def load_face_for_search(uploaded_image):
                 if encodings:
                     return encodings[0], file_path
                 else:
-                    print("Не удалось обнаружить лицо на фото.")
+                    print("No face detected.")
                     return None, None
         except Exception as e:
-            print(f"Ошибка при обработке файла: {e}")
+            print(f"Error while processing: {e}")
             return None
 
 
@@ -289,7 +292,7 @@ def search_face_in_db(conn, cursor, query_encoding, query_filename):
 
     if matches:
         best_match = max(matches, key=lambda x: x[1])
-        if best_match[1] >= 60:  # Порог схожести 60%
+        if best_match[1] >= 50:  # Порог схожести 60%
             db_matched_ph_path = os.path.join(faces_dir, os.path.basename(best_match[0]))
             show_notice(True)
             return {
@@ -307,6 +310,7 @@ def search_face_in_db(conn, cursor, query_encoding, query_filename):
     cursor.execute("INSERT INTO faces (filename, encoding) VALUES (?, ?)",
                    (query_filename, query_encoding.tobytes()))
     cursor.execute("INSERT INTO indexed_files (filename) VALUES (?)", (query_filename,))
+    print(f"New file added to the database: {query_filename}")
     conn.commit()
 
     # Копирование файла в папку faces
@@ -326,7 +330,7 @@ def search_face_in_db(conn, cursor, query_encoding, query_filename):
             'db_user_ph_url': f"/get_image/{os.path.basename(query_filename)}"
         }
     except Exception as e:
-        print(f"Ошибка при копировании файла: {e}")
+        print(f"Error while copying the file: {e}")
         return {
             'match_found': False,
             'message': f'Error adding new face to the database: {str(e)}',
@@ -365,7 +369,4 @@ def search_in_db():
 
 
 if __name__ == "__main__":
-    # app.run()
-    # conn, cursor = connect_or_create_db()
-    # index_photos(conn, cursor)
     FlaskUI(app=app, server="flask", width=1280, height=768).run()
