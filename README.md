@@ -11,7 +11,7 @@
 
 ![image](https://github.com/user-attachments/assets/837febe0-63b2-4ee2-81de-b6d3e7b4f8d1)
 
-##  Nancy is a face recognition program that allows users to search for faces in a database and add new faces. This project is currently in beta, and there may be instability issues, particularly with database path copying.
+##  Nancy is a face recognition program that allows users to search for faces in a database and add new faces. 
 
 
 #  Why Nancy? If correctly configured one can play Nancy Drew.
