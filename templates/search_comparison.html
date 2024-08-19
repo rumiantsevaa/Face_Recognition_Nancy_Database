@@ -93,14 +93,14 @@
         }
 
         #reset-btn-container {
-        display: none; /* Изначально скрыто */
-        position: fixed;
-        bottom: 20px; /* Расстояние от нижнего края экрана */
-        left: 50%; /* Центрирование по горизонтали */
-        transform: translateX(-50%); /* Корректировка для центрирования */
-        width: 100%;
-        text-align: center;
-    }
+            display: none; /* Изначально скрыто */
+            position: fixed;
+            bottom: 20px; /* Расстояние от нижнего края экрана */
+            left: 50%; /* Центрирование по горизонтали */
+            transform: translateX(-50%); /* Корректировка для центрирования */
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -125,10 +125,12 @@
             </div>
         </div>
         <div id="reset-btn-container" class="btn-container" style="display: none;">
-    <button class="btn" onclick="resetSearch()">RESET SEARCH</button>
-</div>
+            <button class="btn" onclick="resetSearch()">RESET SEARCH</button>
+        </div>
     </div>
     <script>
+        let promptedFilenames = new Set(); // Глобальная переменная для отслеживания, какие файлы уже обрабатывались
+
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const filepath = urlParams.get('filepath');
@@ -158,10 +160,10 @@
                 } else {
                     updateUI(searchResults);
                     showResetButton(); // Показываем кнопку RESET SEARCH
-                    if (!searchResults.match_found) {
+                    if (!searchResults.match_found && searchResults.db_new_ph_url) {
                         promptForName(searchResults.db_new_ph_url);
-                }
                     }
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -169,39 +171,59 @@
         }
 
         function promptForName(filename) {
-        if (confirm('Would you like to add a name for this face?')) {
-            let name = prompt('Type the name here');
-            let confirmName = confirm('Confirm or deny your choice');
-            if (confirmName && name) {
-                addNameToDatabase(filename, name);
+            let bareFilename = filename.split('/').pop();
+
+            if (promptedFilenames.has(bareFilename)) {
+                return; // Если имя уже было обработано, выходим
+            }
+
+            if (confirm('Would you like to add a name for this face?')) {
+                let name = prompt('Type the name here');
+                if (name) {
+                    let confirmName = confirm('Confirm or deny your choice');
+                    if (confirmName) {
+                        addNameToDatabase(filename, name);
+                        // Добавляем имя файла в набор, чтобы предотвратить повторное вызовы
+                        promptedFilenames.add(bareFilename);
+                    } else {
+                        console.log('Name addition cancelled by user.');
+                    }
+                } else {
+                    console.log('No name entered.');
+                }
             } else {
                 console.log('The new face was saved with no name given.');
             }
-        } else {
-            console.log('The new face was saved with no name given.');
         }
-    }
 
-    function addNameToDatabase(filename, name) {
-        fetch('/add_name', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ filename: filename, name: name }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log('Name added successfully');
-            } else {
-                console.error('Failed to add name:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
+        function addNameToDatabase(filename, name) {
+            // Extract just the filename from the URL
+            let bareFilename = filename.split('/').pop();
+
+            fetch('/add_name', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filename: bareFilename, name: name }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Name added successfully');
+                    alert('Name added successfully');
+                    // Обновляем UI, чтобы отобразить новое имя
+                    document.getElementById('db-name-text').textContent = `Name: ${name}`;
+                } else {
+                    console.error('Failed to add name:', data.message);
+                    alert('Failed to add name: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding name: ' + error);
+            });
+        }
 
         function processFace(filepath) {
             fetch('/process_face', {
@@ -225,51 +247,54 @@
             });
         }
 
-function updateUI(searchResults) {
-    const userPhotoBox = document.getElementById('user-photo-box');
-    const dbPhotoBox = document.getElementById('db-photo-box');
-    const userPhotoText = document.getElementById('user-photo-text');
-    const dbPhotoText = document.getElementById('db-photo-text');
-    const dbSimilarityText = document.getElementById('db-similarity-text');
-    const dbNameText = document.getElementById('db-name-text');
+        function updateUI(searchResults) {
+            const userPhotoBox = document.getElementById('user-photo-box');
+            const dbPhotoBox = document.getElementById('db-photo-box');
+            const userPhotoText = document.getElementById('user-photo-text');
+            const dbPhotoText = document.getElementById('db-photo-text');
+            const dbSimilarityText = document.getElementById('db-similarity-text');
+            const dbNameText = document.getElementById('db-name-text');
 
-    console.log('User Photo URL:', searchResults.db_user_ph_url);
-    console.log('DB Photo URL:', searchResults.db_matched_ph_url || searchResults.db_new_ph_url || 'N/A');
+            // Обновляем фото пользователя
+            userPhotoBox.querySelector('img').src = searchResults.db_user_ph_url;
+            userPhotoText.textContent = "User Photo";
 
-    // Обновляем фото пользователя
-    userPhotoBox.querySelector('img').src = searchResults.db_user_ph_url;
+            // Проверяем есть ли совпадение
+            if (searchResults.match_found) {
+                dbPhotoBox.querySelector('img').src = searchResults.db_matched_ph_url;
+                dbPhotoText.textContent = "DB Photo";
+                dbSimilarityText.textContent = `Similarity: ${searchResults.similarity}`;
+                dbNameText.textContent = `Name: ${searchResults.name || 'Unknown'}`;
 
-    // Обновляем текстовые параметры для пользователя
-    userPhotoText.textContent = "User Photo";
+                // Триггерим вводм имени для лица, если его нет
+                if (!searchResults.name) {
+                    promptForName(searchResults.db_matched_ph_url);
+                }
+            } else if (searchResults.db_new_ph_url) {
+                dbPhotoBox.querySelector('img').src = searchResults.db_new_ph_url;
+                dbPhotoText.textContent = "New Photo Added to DB";
+                dbSimilarityText.textContent = 'Similarity: N/A';
+                dbNameText.textContent = 'Name: N/A';
 
-    // Обновляем текстовые параметры для базы данных
-    if (searchResults.match_found) {
-        dbPhotoBox.querySelector('img').src = searchResults.db_matched_ph_url;
-        dbPhotoText.textContent = "DB Photo";
-        dbSimilarityText.textContent = `Similarity: ${searchResults.similarity}`;
-        dbNameText.textContent = `Name: ${searchResults.name || 'Unknown'}`;
-    } else if (searchResults.db_new_ph_url) {
-        dbPhotoBox.querySelector('img').src = searchResults.db_new_ph_url;
-        dbPhotoText.textContent = "New Photo Added to DB";
-        dbSimilarityText.textContent = 'Similarity: N/A';
-        dbNameText.textContent = 'Name: N/A';
-    } else {
-        dbPhotoBox.querySelector('img').src = ''; // Очищаем изображение
-        dbPhotoText.textContent = searchResults.message;
-        dbSimilarityText.textContent = 'Similarity: N/A';
-        dbNameText.textContent = 'Name: N/A';
-    }
-}
+                // Ввод имени 
+                promptForName(searchResults.db_new_ph_url);
+            } else {
+                dbPhotoBox.querySelector('img').src = ''; // Clear image
+                dbPhotoText.textContent = searchResults.message;
+                dbSimilarityText.textContent = 'Similarity: N/A';
+                dbNameText.textContent = 'Name: N/A';
+            }
+        }
 
-// Функция для отображения кнопки RESET SEARCH
-    function showResetButton() {
-        document.getElementById('reset-btn-container').style.display = 'flex';
-    }
+        // Функция для отображения кнопки RESET SEARCH
+        function showResetButton() {
+            document.getElementById('reset-btn-container').style.display = 'flex';
+        }
 
-    // Функция для обработки нажатия на кнопку RESET SEARCH
-    function resetSearch() {
-        window.location.href = '/search'; // Перенаправление на страницу поиска
-    }
+        // Функция для обработки нажатия на кнопку RESET SEARCH
+        function resetSearch() {
+            window.location.href = '/search'; // Перенаправление на страницу поиска
+        }
     </script>
 </body>
 </html>
