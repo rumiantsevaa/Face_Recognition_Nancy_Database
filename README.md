@@ -1,8 +1,6 @@
 # Nancy Face Recognition | Destop GUI Application 
 
-<p align="center">
-  <img width="1280 " height="600" src="https://github.com/user-attachments/assets/be9adc6d-fc12-43c3-aa93-bdae2db51f0e">
-</p>
+![image](https://github.com/user-attachments/assets/be9adc6d-fc12-43c3-aa93-bdae2db51f0e)
 
 ## _This page is also available in [Russian version](https://github.com/rumiantsevaa/Face_Recognition_Nancy_Database/blob/main/(ru)README.md)_
 
