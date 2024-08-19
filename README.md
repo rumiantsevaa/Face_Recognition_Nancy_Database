@@ -1,8 +1,13 @@
-# Nancy Face Recognition | Destop GUI Application (Beta version)
+# Nancy Face Recognition | Destop GUI Application 
+
+<p align="center">
+  <img width="1280 " height="600" src="https://github.com/user-attachments/assets/be9adc6d-fc12-43c3-aa93-bdae2db51f0e">
+</p>
 
 ## _This page is also available in [Russian version](https://github.com/rumiantsevaa/Face_Recognition_Nancy_Database/blob/main/(ru)README.md)_
 
-![image](https://github.com/user-attachments/assets/95b5a2c0-af39-45ca-bffd-8a5b0e7ee69b)
+![image](https://github.com/user-attachments/assets/280f91f9-0679-4931-8d49-9c870a1255f3)
+
 
 ##  This application was created to make a simple yet powerful face recognition application based on your own local face database.
 
@@ -42,9 +47,7 @@
 
 ### - Add new faces to the database
 
-![image](https://github.com/user-attachments/assets/f97eb416-e65b-4d58-9da0-0bc2c28fd375)
-
-![image](https://github.com/user-attachments/assets/efc54bf7-e0a2-4287-bf9a-3eb449a91d97)
+![image](https://github.com/user-attachments/assets/97f1f1a5-ceb5-4c60-af7d-c6d20eb35baa)
 
 
 ### - Web-based user interface
@@ -53,6 +56,10 @@
 
 
 ### - Comparison view for user photo and database match
+
+![image_2024-08-19_18-59-52](https://github.com/user-attachments/assets/722439ef-01e5-417d-b160-4589e6728f0e)
+
+![image_2024-08-19_19-05-09](https://github.com/user-attachments/assets/b6623e92-8025-4911-bac8-685ec35bd9de)
 
 
 ## Installation | Requirements
