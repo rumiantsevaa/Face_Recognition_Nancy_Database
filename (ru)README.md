@@ -24,7 +24,7 @@
 
 ## Струĸтура
 
-![image](https://github.com/user-attachments/assets/49bcde47-01fd-4a3e-a1b7-31c7d2e82599)
+![image](https://github.com/user-attachments/assets/295ef116-fb32-47ec-8473-492c8b8a3c01)
 
 
 ## Методы
