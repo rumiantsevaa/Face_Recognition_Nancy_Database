@@ -28,7 +28,7 @@
 
 ## Structure
 
-![image](https://github.com/user-attachments/assets/49bcde47-01fd-4a3e-a1b7-31c7d2e82599)
+![image](https://github.com/user-attachments/assets/fb699153-852d-45d8-ac6b-80dab12e890d)
 
 
 ## Features
